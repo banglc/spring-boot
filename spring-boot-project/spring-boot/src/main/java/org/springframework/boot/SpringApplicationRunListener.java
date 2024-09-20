@@ -28,6 +28,26 @@ import org.springframework.core.io.support.SpringFactoriesLoader;
  * instance and a {@code String[]} of arguments. A new
  * {@link SpringApplicationRunListener} instance will be created for each run.
  *
+ * public interface SpringApplicationRunListener {
+ *     // 在run()方法开始执行时，该方法就立即被调用，可用于在初始化最早期时做一些工作
+ *     void starting();
+ *     // 当environment构建完成，ApplicationContext创建之前，该方法被调用
+ *     void environmentPrepared(ConfigurableEnvironment environment);
+ *     // 当ApplicationContext构建完成时，该方法被调用
+ *     void contextPrepared(ConfigurableApplicationContext context);
+ *     // 在ApplicationContext完成加载，但没有被刷新前，该方法被调用
+ *     void contextLoaded(ConfigurableApplicationContext context);
+ *     // 在ApplicationContext刷新并启动后，CommandLineRunners和ApplicationRunner未被调用前，该方法被调用
+ *     void started(ConfigurableApplicationContext context);
+ *     // 在run()方法执行完成前该方法被调用
+ *     void running(ConfigurableApplicationContext context);
+ *     // 当应用运行出错时该方法被调用
+ *     void failed(ConfigurableApplicationContext context, Throwable exception);
+ * }
+ *
+ *
+ *
+ *
  * @author Phillip Webb
  * @author Dave Syer
  * @author Andy Wilkinson

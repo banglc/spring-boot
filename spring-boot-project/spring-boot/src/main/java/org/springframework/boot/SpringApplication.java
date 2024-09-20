@@ -16,6 +16,19 @@
 
 package org.springframework.boot;
 
+import java.lang.reflect.Constructor;
+import java.security.AccessControlException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeanUtils;
@@ -47,16 +60,26 @@ import org.springframework.core.GenericTypeResolver;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.ConfigurableConversionService;
-import org.springframework.core.env.*;
+import org.springframework.core.env.CommandLinePropertySource;
+import org.springframework.core.env.CompositePropertySource;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.MutablePropertySources;
+import org.springframework.core.env.PropertySource;
+import org.springframework.core.env.SimpleCommandLinePropertySource;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.SpringFactoriesLoader;
-import org.springframework.util.*;
+import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StopWatch;
+import org.springframework.util.StringUtils;
 import org.springframework.web.context.support.StandardServletEnvironment;
-
-import java.lang.reflect.Constructor;
-import java.security.AccessControlException;
-import java.util.*;
 
 /**
  * Class that can be used to bootstrap and launch a Spring application from a Java main
@@ -255,7 +278,7 @@ public class SpringApplication {
 		//其实就是从类路径META-INF/spring.factories中加载ApplicationContextInitializer的值
 		//实例化并排序
 		setInitializers((Collection) getSpringFactoriesInstances(ApplicationContextInitializer.class));
-		//设置一系列监听器，启动过程中会触发
+		//设置一系列ApplicationListener监听器，启动过程中会触发
 		//逻辑和初始化器一致
 		setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));
 		//决定主启动类
@@ -284,10 +307,22 @@ public class SpringApplication {
 	 * @return a running {@link ApplicationContext}
 	 */
 	public ConfigurableApplicationContext run(String... args) {
+		//计时器，用于记录启动时间和输出日志
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
 		ConfigurableApplicationContext context = null;
+		//设置无头模式，确保应用在无 GUI 环境中正常运行
 		configureHeadlessProperty();
+		//获取SpringApplicationRunListener，获取逻辑同获取ApplicationListener
+		//SpringApplicationRunListener
+		//作用：主要用于监听 Spring Boot 应用的生命周期事件，允许开发者在应用启动的各个阶段执行自定义逻辑，比如在初始化、刷新和运行时阶段。
+		//使用场景：可以用于实现特定的启动逻辑，比如条件配置或环境准备。
+		//ApplicationListener
+		//作用：监听 Spring 应用上下文中的通用事件，如上下文启动、停止和其他应用事件，适用于所有类型的 Spring 应用。
+		//使用场景：用于处理应用中的事件，例如处理自定义事件或监听 Bean 的生命周期事件。
+		//区别
+		//生命周期阶段：SpringApplicationRunListener 更关注于 Spring Boot 启动过程中的特定事件，而 ApplicationListener 更加通用，适用于整个 Spring 上下文的事件。
+		//注册方式：SpringApplicationRunListener 通过 SPI 机制自动注册，而 ApplicationListener 通常在 Spring 上下文中通过注解或配置手动注册。
 		SpringApplicationRunListeners listeners = getRunListeners(args);
 		listeners.starting();
 		try {
