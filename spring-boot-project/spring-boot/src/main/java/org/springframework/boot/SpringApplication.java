@@ -41,6 +41,7 @@ import org.springframework.beans.factory.support.BeanNameGenerator;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.boot.Banner.Mode;
+import org.springframework.boot.context.event.EventPublishingRunListener;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.context.properties.source.ConfigurationPropertySources;
@@ -303,6 +304,8 @@ public class SpringApplication {
 	 * Run the Spring application, creating and refreshing a new
 	 * {@link ApplicationContext}.
 	 *
+	 * {@link EventPublishingRunListener}
+	 *
 	 * @param args the application arguments (usually passed from a Java main method)
 	 * @return a running {@link ApplicationContext}
 	 */
@@ -313,7 +316,7 @@ public class SpringApplication {
 		ConfigurableApplicationContext context = null;
 		//设置无头模式，确保应用在无 GUI 环境中正常运行
 		configureHeadlessProperty();
-		//获取SpringApplicationRunListener，获取逻辑同获取ApplicationListener
+		//获取SpringApplicationRunListener {@link EventPublishingRunListener.class}，获取逻辑同获取ApplicationListener
 		//SpringApplicationRunListener
 		//作用：主要用于监听 Spring Boot 应用的生命周期事件，允许开发者在应用启动的各个阶段执行自定义逻辑，比如在初始化、刷新和运行时阶段。
 		//使用场景：可以用于实现特定的启动逻辑，比如条件配置或环境准备。
@@ -324,6 +327,7 @@ public class SpringApplication {
 		//生命周期阶段：SpringApplicationRunListener 更关注于 Spring Boot 启动过程中的特定事件，而 ApplicationListener 更加通用，适用于整个 Spring 上下文的事件。
 		//注册方式：SpringApplicationRunListener 通过 SPI 机制自动注册，而 ApplicationListener 通常在 Spring 上下文中通过注解或配置手动注册。
 		SpringApplicationRunListeners listeners = getRunListeners(args);
+		//向所有ApplicationListener的实现类广播事件new ApplicationStartingEvent(this.application, this.args)
 		listeners.starting();
 		try {
 			ApplicationArguments applicationArguments = new DefaultApplicationArguments(args);

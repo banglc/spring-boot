@@ -18,7 +18,6 @@ package org.springframework.boot.context.event;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.SpringApplicationRunListener;
 import org.springframework.boot.availability.AvailabilityChangeEvent;
@@ -56,10 +55,15 @@ public class EventPublishingRunListener implements SpringApplicationRunListener,
 	private final SimpleApplicationEventMulticaster initialMulticaster;
 
 	public EventPublishingRunListener(SpringApplication application, String[] args) {
+		//保存一份创建好的SpringApplication
 		this.application = application;
+		//保存启动参数
 		this.args = args;
+		//初始化一个简单应用事件广播器
 		this.initialMulticaster = new SimpleApplicationEventMulticaster();
+		//将SpringApplication中的applicationListener添加到广播器中
 		for (ApplicationListener<?> listener : application.getListeners()) {
+			//同步地向默认检索器添加监听器。避免已注册代理监听器的重复调用，通过移除已存在的原始目标监听器。清理缓存的检索器。
 			this.initialMulticaster.addApplicationListener(listener);
 		}
 	}
@@ -116,8 +120,7 @@ public class EventPublishingRunListener implements SpringApplicationRunListener,
 			// Listeners have been registered to the application context so we should
 			// use it at this point if we can
 			context.publishEvent(event);
-		}
-		else {
+		} else {
 			// An inactive context may not have a multicaster so we use our multicaster to
 			// call all of the context's listeners instead
 			if (context instanceof AbstractApplicationContext) {
