@@ -199,6 +199,11 @@ public class ConfigFileApplicationListener implements EnvironmentPostProcessor, 
 		List<EnvironmentPostProcessor> postProcessors = loadPostProcessors();
 		postProcessors.add(this);
 		AnnotationAwareOrderComparator.sort(postProcessors);
+		//1.SystemEnvironmentPropertySourceEnvironmentPostProcessor（将environment下propertySource中的systemEnvironment替换成这个）
+		//2.SpringApplicationJsonEnvironmentPostProcessor(解析配置中的json)
+		//3.CloudFoundryVcapEnvironmentPostProcessor（CloudPlatform相关不知道干啥）
+		//4.ConfigFileApplicationListener（没错就是本类，加载资源文件）
+		//5.DebugAgentEnvironmentPostProcessor（to enable the Reactor Debug Agent if available）
 		for (EnvironmentPostProcessor postProcessor : postProcessors) {
 			postProcessor.postProcessEnvironment(event.getEnvironment(), event.getSpringApplication());
 		}
@@ -225,7 +230,9 @@ public class ConfigFileApplicationListener implements EnvironmentPostProcessor, 
 	 * @see #addPostProcessors(ConfigurableApplicationContext)
 	 */
 	protected void addPropertySources(ConfigurableEnvironment environment, ResourceLoader resourceLoader) {
+		//将random加入到propertySource中，且在systemEnvironment后面
 		RandomValuePropertySource.addToEnvironment(environment);
+		//加载所有资源文件（classpath:/,classpath:/config/,file:./,file:./config/*/,file:./config/），设置activeFile
 		new Loader(environment, resourceLoader).load();
 	}
 

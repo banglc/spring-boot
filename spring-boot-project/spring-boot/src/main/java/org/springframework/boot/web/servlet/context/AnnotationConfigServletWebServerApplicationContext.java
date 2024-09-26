@@ -70,6 +70,8 @@ public class AnnotationConfigServletWebServerApplicationContext extends ServletW
 	 * {@linkplain #refresh refreshed}.
 	 */
 	public AnnotationConfigServletWebServerApplicationContext() {
+		//创建一个AnnotatedBeanDefinitionReader，并设置一些解析注释的PostProcessor
+		//见方法org.springframework.context.annotation.AnnotationConfigUtils.registerAnnotationConfigProcessors()
 		this.reader = new AnnotatedBeanDefinitionReader(this);
 		this.scanner = new ClassPathBeanDefinitionScanner(this);
 	}
