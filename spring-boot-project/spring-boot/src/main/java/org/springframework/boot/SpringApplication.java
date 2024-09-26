@@ -384,22 +384,23 @@ public class SpringApplication {
 	private void prepareContext(ConfigurableApplicationContext context, ConfigurableEnvironment environment,
 								SpringApplicationRunListeners listeners, ApplicationArguments applicationArguments, Banner printedBanner) {
 		context.setEnvironment(environment);
-		// due to beanNameGenerator and resourceLoader are all null,do nothing
-		// set beanFactory.conversionService a singleton shared instance
+		//设置在context初始化时实例化的ConversionService到beanFactory中
 		postProcessApplicationContext(context);
-		// apply initializes(default 6)
-		// invoke method ApplicationContextInitializer.initialize(...)
-		// org.springframework.boot.autoconfigure.SharedMetadataReaderFactoryContextInitializer
-		// org.springframework.boot.context.config.DelegatingApplicationContextInitializer
-		// org.springframework.boot.context.ContextIdApplicationContextInitializer
-		// org.springframework.boot.autoconfigure.logging.ConditionEvaluationReportLoggingListener
-		// org.springframework.boot.context.ConfigurationWarningsApplicationContextInitialize
-		// org.springframework.boot.rsocket.context.RSocketPortInfoApplicationContextInitializer
-		// org.springframework.boot.web.context.ServerPortInfoApplicationContextInitializer
+		// SharedMetadataReaderFactoryContextInitializer（给容器添加的beanFactoryPostProcessor添加一个CachingMetadataReaderFactoryPostProcessor）
+		// DelegatingApplicationContextInitializer（委托给其他initializer来处理，可以通过属性context.initializer.classes来配置 ）
+		// ContextIdApplicationContextInitializer（给context和beanFactory设置contextId）
+		// ConditionEvaluationReportLoggingListener(日志相关)
+		// ConfigurationWarningsApplicationContextInitialize（检查配置错误，warning）
+		// RSocketPortInfoApplicationContextInitializer（处理RSocket，不了解）
+		// ServerPortInfoApplicationContextInitializer（把自己添加到applicationListener中，好奇为什么不直接加？）
 		applyInitializers(context);
+		//BackgroundPreinitializer（啥也没做）
+		//DelegatingApplicationListener（啥也没做）
 		listeners.contextPrepared(context);
 		if (this.logStartupInfo) {
+			//打印启动信息
 			logStartupInfo(context.getParent() == null);
+			//打印active profiles信息
 			logStartupProfileInfo(context);
 		}
 		// Add boot specific singleton beans
