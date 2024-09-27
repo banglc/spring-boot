@@ -53,6 +53,7 @@ import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.SpringFactoriesLoader;
 import org.springframework.util.*;
+import org.springframework.web.context.support.GenericWebApplicationContext;
 import org.springframework.web.context.support.StandardServletEnvironment;
 
 import java.lang.reflect.Constructor;
@@ -319,6 +320,7 @@ public class SpringApplication {
 			context = createApplicationContext();
 			//添加一些beanFactoryPostProcessor，注册启动类到singletonObjects中，设置是否允许allowBeanDefinitionOverriding
 			prepareContext(context, environment, listeners, applicationArguments, printedBanner);
+			//spring的刷新方法
 			refreshContext(context);
 			afterRefresh(context, applicationArguments);
 			stopWatch.stop();
@@ -809,6 +811,26 @@ public class SpringApplication {
 
 	/**
 	 * Refresh the underlying {@link ApplicationContext}.
+	 * <p>
+	 * 解析{@link AbstractApplicationContext#refresh()}
+	 * <p>
+	 * <p>
+	 * 1.{@link org.springframework.context.support.AbstractApplicationContext#prepareRefresh()}
+	 * a.设置spring开始时间和一些状态位
+	 * b.正常spring是空方法，但是在springboot中，会调用{@link GenericWebApplicationContext#initPropertySources()} 处理一些替换实例的操作，可以不看
+	 * c.validate那些标记为requires的properties
+	 * d.把applicationListeners复制到earlyApplicationListeners
+	 * <p>
+	 * 2.{@link AbstractApplicationContext#obtainFreshBeanFactory()}
+	 * 让子类刷新内部的bean factory，并且返回一个BeanFactory，其实什么都没做直接返回了
+	 *
+	 * 3.{@link AbstractApplicationContext#prepareBeanFactory(ConfigurableListableBeanFactory)}
+	 * 配置BeanFactory，设置一些属性，添加一些beanPostProcessor，注册几个环境相关的bean
+	 *
+	 *
+	 * 4.{@link AbstractApplicationContext#postProcessBeanFactory(ConfigurableListableBeanFactory)}
+	 *a.Register ServletContextAwareProcessor
+	 * b.registerWebApplicationScopes
 	 *
 	 * @param applicationContext the application context to refresh
 	 */

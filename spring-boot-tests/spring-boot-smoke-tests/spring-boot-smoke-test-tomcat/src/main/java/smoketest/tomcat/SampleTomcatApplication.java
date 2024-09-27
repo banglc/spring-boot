@@ -18,15 +18,15 @@ package smoketest.tomcat;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
+@ComponentScan(value = {"smoketest.tomcat.org.kkxx"})
 public class SampleTomcatApplication {
 
 	private static Log logger = LogFactory.getLog(SampleTomcatApplication.class);
