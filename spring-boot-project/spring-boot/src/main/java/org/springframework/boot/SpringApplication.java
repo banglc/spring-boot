@@ -317,6 +317,7 @@ public class SpringApplication {
 			//根据webApplicationType创建ConfigurableApplicationContext
 			// 并设置context的reader和scanner，读取一些用来解析注解的postProcessor的元数据到beanFactory的beanDefinitionMap中
 			context = createApplicationContext();
+			//添加一些beanFactoryPostProcessor，注册启动类到singletonObjects中，设置是否允许allowBeanDefinitionOverriding
 			prepareContext(context, environment, listeners, applicationArguments, printedBanner);
 			refreshContext(context);
 			afterRefresh(context, applicationArguments);
@@ -422,7 +423,13 @@ public class SpringApplication {
 		// 将source整合成一个不变的集合，一般的话，sources只有一个main方法所在类
 		Set<Object> sources = getAllSources();
 		Assert.notEmpty(sources, "Sources must not be empty");
+		//把启动类加载到BeanDefinitionMap
 		load(context, sources.toArray(new Object[0]));
+//		CloudFoundryVcapEnvironmentPostProcessor（CloudPlatform相关）
+//		ConfigFileApplicationListener （添加一个PropertySourceOrderingPostProcessor的beanFacotyPostProcessor）
+//		LoggingApplicationListener （日志相关）
+//		BackgroundPreinitializer 没处理
+//		DelegatingApplicationListener 没处理
 		listeners.contextLoaded(context);
 	}
 
