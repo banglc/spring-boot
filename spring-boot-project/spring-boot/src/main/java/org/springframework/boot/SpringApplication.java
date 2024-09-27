@@ -403,21 +403,23 @@ public class SpringApplication {
 			//打印active profiles信息
 			logStartupProfileInfo(context);
 		}
-		// Add boot specific singleton beans
 		ConfigurableListableBeanFactory beanFactory = context.getBeanFactory();
+		// Add an ApplicationArguments bean
 		beanFactory.registerSingleton("springApplicationArguments", applicationArguments);
+		// Add a Banner bean
 		if (printedBanner != null) {
 			beanFactory.registerSingleton("springBootBanner", printedBanner);
 		}
+		// 设置是否支持bean重载（allowBeanDefinitionOverriding）
 		if (beanFactory instanceof DefaultListableBeanFactory) {
 			((DefaultListableBeanFactory) beanFactory)
 					.setAllowBeanDefinitionOverriding(this.allowBeanDefinitionOverriding);
 		}
+		//如果支持懒加载，则添加一个LazyInitializationBeanFactoryPostProcessor
 		if (this.lazyInitialization) {
 			context.addBeanFactoryPostProcessor(new LazyInitializationBeanFactoryPostProcessor());
 		}
-		// Load the sources
-		// get main class
+		// 将source整合成一个不变的集合，一般的话，sources只有一个main方法所在类
 		Set<Object> sources = getAllSources();
 		Assert.notEmpty(sources, "Sources must not be empty");
 		load(context, sources.toArray(new Object[0]));
@@ -718,7 +720,8 @@ public class SpringApplication {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Loading source " + StringUtils.arrayToCommaDelimitedString(sources));
 		}
-		//create beanDefinitionLoader
+		//1.创建BeanDefinitionRegistry(BeanDefinition注册表)
+		//2.创建BeanDefinitionLoader，用来加载BeanDefinition到注册表中
 		BeanDefinitionLoader loader = createBeanDefinitionLoader(getBeanDefinitionRegistry(context), sources);
 		if (this.beanNameGenerator != null) {
 			loader.setBeanNameGenerator(this.beanNameGenerator);
@@ -730,7 +733,6 @@ public class SpringApplication {
 			loader.setEnvironment(this.environment);
 		}
 		//add mainClass beanDefinition to beanDefinitionMap
-		//((DefaultListableBeanFactory) ((AnnotationConfigApplicationContext) context).getBeanFactory()).beanDefinitionMap
 		loader.load();
 	}
 
