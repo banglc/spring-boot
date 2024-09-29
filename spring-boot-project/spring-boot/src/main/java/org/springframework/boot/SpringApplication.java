@@ -427,6 +427,7 @@ public class SpringApplication {
 		Assert.notEmpty(sources, "Sources must not be empty");
 		//把启动类加载到BeanDefinitionMap
 		load(context, sources.toArray(new Object[0]));
+		//ApplicationContextAware处理的地方
 //		CloudFoundryVcapEnvironmentPostProcessor（CloudPlatform相关）
 //		ConfigFileApplicationListener （添加一个PropertySourceOrderingPostProcessor的beanFacotyPostProcessor）
 //		LoggingApplicationListener （日志相关）
@@ -822,15 +823,39 @@ public class SpringApplication {
 	 * d.把applicationListeners复制到earlyApplicationListeners
 	 * <p>
 	 * 2.{@link AbstractApplicationContext#obtainFreshBeanFactory()}
-	 * 让子类刷新内部的bean factory，并且返回一个BeanFactory，其实什么都没做直接返回了
+	 *
+	 *            获取beanFactory（DefaultListableBeanFactory）
+	 *            设置applicationContext状态为已刷新 refreshed=true
+	 *            为beanFactory设置id（id=application）
+	 *            在这一步中，还没有加载beanDefinition
 	 *
 	 * 3.{@link AbstractApplicationContext#prepareBeanFactory(ConfigurableListableBeanFactory)}
-	 * 配置BeanFactory，设置一些属性，添加一些beanPostProcessor，注册几个环境相关的bean
 	 *
+	 *                完善beanFactory
+	 *                1. 设置classLoader beanClassLoader
+	 *                2. 设置el表达式的解析器 StandardBeanExpressionResolver
+	 *                3. 添加默认的beanPostProcessor（ApplicationContextAwareProcessor），
+	 *                    用来处理各种Aware
+	 *                    EnvironmentAware、EmbeddedValueResolverAware、
+	 *                    ResourceLoaderAware、ApplicationEventPublisherAware、
+	 *                    MessageSourceAware、ApplicationContextAware
+	 *                4. 设置默认的beanPostProcessor (ApplicationListenerDetector)
+	 *                5. 将environment添加到beanFactory中
+	 *                6. 将systemProperties添加在beanFactory中
+	 *                7. 将systemEnvironment添加到beanFactory中
 	 *
 	 * 4.{@link AbstractApplicationContext#postProcessBeanFactory(ConfigurableListableBeanFactory)}
-	 *a.Register ServletContextAwareProcessor
-	 * b.registerWebApplicationScopes
+	 *
+	 *      beanFactory完善后的后置处理，AbstractApplicationContext中该方法是空的，需要交给不同应用场景的ApplicationContext来自行实现
+	 *      比如在ServletWebServerApplicationContext中，因为他是基于Servlet实现的Web应用，所以进行了一些针对Servlet的处理
+	 *              1. 在Servlte中有一个ServletContext类，他是整个Servlet应用唯一的，在ServletWebServerApplicationContext就
+	 *                 的postProcessBeanFactory就实现了添加了一个bean后置处理器WebApplicationContextServletContextAwareProcessor
+	 *                  该后置处理器用于在实现了ServletContextAware接口的bean中注入ServletContext
+	 *              2. Servlte应用有几种作用域，所以在ServletWebServerApplicationContext中实现了作用域的注册
+	 *                 Session域、Request域
+	 *
+	 * 5.{@link AbstractApplicationContext#invokeBeanFactoryPostProcessors(ConfigurableListableBeanFactory)}
+	 *1.首先处理加载BeanDefinitionRegistryPostProcessor到beanDefinitionMap中，并配置相关信息，然后再加载其他的beanFactoryPostProcessor
 	 *
 	 * @param applicationContext the application context to refresh
 	 */
